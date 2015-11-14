@@ -4,6 +4,7 @@ package lang
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 )
 
@@ -32,6 +33,14 @@ func (l *Lexer) Scan() (Token, string) {
 		l.unread()
 
 		return l.scanNumber()
+	} else if l.isEquality(ch) {
+		l.unread()
+
+		tok, lit, err := l.scanEquality()
+
+		if err == nil {
+			return tok, lit
+		}
 	}
 
 	switch ch {
@@ -48,6 +57,29 @@ func (l *Lexer) Scan() (Token, string) {
 	}
 
 	return Illegal, string(ch)
+}
+
+func (l *Lexer) isEquality(ch rune) bool {
+	return ch == '=' || ch == '!'
+}
+
+func (l *Lexer) scanEquality() (Token, string, error) {
+	a := l.read()
+	b := l.read()
+
+	sym := string(a) + string(b)
+
+	switch sym {
+	case "==":
+		return Equals, sym, nil
+	case "!=":
+		return NotEquals, sym, nil
+	}
+
+	l.unread()
+	l.unread()
+
+	return Illegal, sym, errors.New("illegal")
 }
 
 func (l *Lexer) isWhitespace(ch rune) bool {
@@ -74,7 +106,7 @@ func (l *Lexer) scanWhitespace() (Token, string) {
 }
 
 func (l *Lexer) isNumber(ch rune) bool {
-	return ch > '0' && ch < '9'
+	return ch >= '0' && ch <= '9'
 }
 
 func (l *Lexer) scanNumber() (Token, string) {
@@ -122,6 +154,8 @@ func (l *Lexer) scanIdentifier() (Token, string) {
 		return String, buf.String()
 	case "int":
 		return Int, buf.String()
+	case "if":
+		return If, buf.String()
 	}
 
 	return Identifier, buf.String()

@@ -1,6 +1,9 @@
 package lang
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type ValueType int
 
@@ -66,4 +69,28 @@ func (v *Value) MustString() string {
 	s, _ := v.ToString()
 
 	return s
+}
+
+func (v *Value) Compare(op Token, y *Value) bool {
+	switch v.typ {
+	case ValueInt:
+		i := v.MustInt()
+		y, err := y.ToInt()
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+
+		switch op {
+		case Equals:
+			return i == y
+		case NotEquals:
+			return i != y
+		}
+
+		fmt.Println("shouldnt be here")
+		return false
+	}
+
+	return false
 }

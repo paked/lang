@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
@@ -65,4 +66,21 @@ func (f *FunctionStatement) Eval(s *Scope) error {
 	}
 
 	return nil
+}
+
+type IfStatement struct {
+	A *Value
+	B *Value
+
+	Op Token
+}
+
+func (is *IfStatement) Eval(s *Scope) error {
+	if is.A.Compare(is.Op, is.B) {
+		fmt.Println("NOTICE: THEY ARE EQUAL")
+	} else {
+		fmt.Println("NOTICE: TEY ARE NOT EQUAL")
+	}
+
+	return errors.New("not implemented")
 }

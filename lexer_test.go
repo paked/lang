@@ -162,3 +162,23 @@ y string = "hello"`
 		}
 	}
 }
+
+func TestLexIf(t *testing.T) {
+	src := `if 0 == 0`
+
+	l := NewLexer(strings.NewReader(src))
+
+	tok, _ := l.Scan()
+	if tok != If {
+		t.Errorf("expected if got %v", tok)
+	}
+
+	l.Scan()
+	l.Scan()
+	l.Scan()
+
+	tok, _ = l.Scan()
+	if tok != Equals {
+		t.Errorf("expected equals got %v", tok)
+	}
+}

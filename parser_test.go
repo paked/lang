@@ -84,3 +84,13 @@ func TestParsingNumber(t *testing.T) {
 		t.Errorf("wrong value, expected %v got %v", 123, i)
 	}
 }
+
+func TestParsingIf(t *testing.T) {
+	src := `if 9 == 9`
+
+	l := NewLexer(strings.NewReader(src))
+	p := NewParser(l)
+
+	prog := p.Parse()
+	prog.Run()
+}

@@ -5,6 +5,7 @@ type Token int
 
 const (
 	Illegal Token = iota + 1
+	Any
 	EOF
 	Whitespace
 
@@ -15,6 +16,8 @@ const (
 	Quotes
 	OpenParen
 	CloseParen
+	OpenBracket
+	CloseBracket
 
 	// Assignment
 	Assign
@@ -25,4 +28,11 @@ const (
 
 	// Vals
 	Number
+
+	// Equality
+	Equals
+	NotEquals
+
+	// Keywords
+	If
 )

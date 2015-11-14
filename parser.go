@@ -52,6 +52,14 @@ func (p *Parser) Parse() *Program {
 			} else {
 				p.reset(n)
 			}
+		} else if p.is(If, Whitespace) {
+			fmt.Println("MATCHING MATCHING")
+			contr, err := p.parseIf()
+			if err == nil {
+				prog.statements = append(prog.statements, contr)
+			} else {
+				p.reset(n)
+			}
 		}
 
 		tok, lit = p.scan()
@@ -66,6 +74,44 @@ func (p *Parser) Parse() *Program {
 	}
 
 	return prog
+}
+
+func (p *Parser) parseIf() (*IfStatement, error) {
+	tok, _ := p.scan()
+	if tok != If {
+		return nil, errors.New("this is an error")
+	}
+
+	tok, _ = p.scanSkipWhitespace()
+	p.unscan()
+
+	a, err := p.parseLiteral()
+	if err != nil {
+		return nil, err
+	}
+
+	tok, _ = p.scanSkipWhitespace()
+	if tok != Equals && tok != NotEquals {
+		return nil, errors.New("not implemtned")
+	}
+
+	op := tok
+
+	p.scanSkipWhitespace()
+	p.unscan()
+
+	b, err := p.parseLiteral()
+	if err != nil {
+		return nil, err
+	}
+
+	is := &IfStatement{
+		A:  a,
+		B:  b,
+		Op: op,
+	}
+
+	return is, nil
 }
 
 func (p *Parser) parseString() (string, error) {
@@ -96,7 +142,7 @@ func (p *Parser) parseString() (string, error) {
 func (p *Parser) parseNumber() (int, error) {
 	tok, lit := p.scan()
 	if tok != Number {
-		return 0, fmt.Errorf("Wrong token type expected %v got %v", Number, tok)
+		return 0, fmt.Errorf("Wrong token type expected %v got %v(%v)", Number, tok, lit)
 	}
 
 	i, err := strconv.Atoi(lit)
@@ -197,7 +243,7 @@ func (p *Parser) is(ts ...Token) bool {
 
 		defer func() { p.unscan() }()
 
-		if tok != t {
+		if tok != t || tok == Any {
 			fmt.Println("Got", t, "expected", tok)
 			return false
 		}
