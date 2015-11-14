@@ -35,8 +35,35 @@ func TestLexIdentifiers(t *testing.T) {
 		t.Errorf("Wrong literal got %v, wanted %v", s, src)
 	}
 }
+func TestLexTypeInt(t *testing.T) {
+	src := `message int`
 
-func TestLexTypes(t *testing.T) {
+	l := NewLexer(strings.NewReader(src))
+
+	// test x
+	tok, s := l.Scan()
+	if tok != Identifier {
+		t.Errorf("Wrong token name got %v, wanted %v", tok, Identifier)
+	}
+
+	if s != "message" {
+		t.Errorf("Wrong literal got %v, wanted %v", s, "message")
+	}
+
+	// skip string
+	l.Scan()
+
+	// test string
+	tok, s = l.Scan()
+	if tok != Int {
+		t.Errorf("(2) Expected String type got %v, wanted %v", tok, Int)
+	}
+
+	if s != "int" {
+		t.Errorf("(2) Wrong naming literal got %v, wanted %v", s, "x")
+	}
+}
+func TestLexTypeString(t *testing.T) {
 	src := `message string`
 
 	l := NewLexer(strings.NewReader(src))

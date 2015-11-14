@@ -73,6 +73,10 @@ func (l *Lexer) isLetter(ch rune) bool {
 	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
 }
 
+func (l *Lexer) isNumber(ch rune) bool {
+	return ch > '0' && ch < '9'
+}
+
 func (l *Lexer) scanIdentifier() (Token, string) {
 	var buf bytes.Buffer
 
@@ -92,6 +96,8 @@ func (l *Lexer) scanIdentifier() (Token, string) {
 	switch buf.String() {
 	case "string":
 		return String, buf.String()
+	case "int":
+		return Int, buf.String()
 	}
 
 	return Identifier, buf.String()
