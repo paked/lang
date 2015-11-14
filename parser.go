@@ -23,7 +23,8 @@ func (p *Parser) Parse() *Program {
 	}
 
 	for {
-		tok, _ := p.scanSkipWhitespace()
+		n := p.n
+		tok, lit := p.scanSkipWhitespace()
 		if tok == EOF {
 			fmt.Println("REACHED EOF!!!")
 			break
@@ -32,18 +33,32 @@ func (p *Parser) Parse() *Program {
 		p.unscan()
 
 		if p.is(MatchAssignment...) {
-			as, _ := p.parseAssignment()
+			as, err := p.parseAssignment()
+			if err == nil {
+				prog.statements = append(prog.statements, as)
+			} else {
+				p.reset(n)
+			}
+		}
 
-			prog.statements = append(prog.statements, as)
+		tok, lit = p.scan()
+		if tok == Whitespace && lit == "\n" {
+			fmt.Println("reached termination!")
 			continue
 		}
 
-		fmt.Println("didnt match")
+		p.unscan()
+
+		fmt.Println("didnt match: SYNTAX ERROR")
 	}
 
-	fmt.Println(prog)
-
 	return prog
+}
+
+func (p *Parser) reset(n int) {
+	for p.n > n {
+		p.unscan()
+	}
 }
 
 var MatchAssignment = []Token{Identifier, Whitespace, String}

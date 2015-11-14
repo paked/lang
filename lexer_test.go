@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -85,5 +86,22 @@ func TestAssignment(t *testing.T) {
 
 	if s != "=" {
 		t.Errorf("Wrong literal for assignment got %v expected %v", tok, Assign)
+	}
+}
+
+func TestMultipleLines(t *testing.T) {
+	src := `x string = "hey"
+y string = "hello"`
+
+	l := NewLexer(strings.NewReader(src))
+
+	for {
+		tok, lit := l.Scan()
+
+		fmt.Println(tok, lit)
+
+		if tok == EOF {
+			break
+		}
 	}
 }
