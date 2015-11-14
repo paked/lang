@@ -39,7 +39,8 @@ func (l *Lexer) Scan() (Token, string) {
 		return CloseParen, ")"
 	case '=':
 		return Assign, "="
-
+	case '"':
+		return Quotes, "\""
 	}
 
 	return Illegal, string(ch)
