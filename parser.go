@@ -29,8 +29,10 @@ func (p *Parser) Parse() *Program {
 			break
 		}
 
-		switch tok {
-		case Identifier:
+		p.unscan()
+
+		if p.is(MatchAssignment...) {
+			tok, lit = p.scanSkipWhitespace()
 			// Got name
 			assign := &AssignmentStatement{
 				Name: lit,
@@ -81,6 +83,8 @@ func (p *Parser) Parse() *Program {
 
 			continue
 		}
+
+		fmt.Println("didnt match")
 	}
 
 	fmt.Println(prog)
@@ -88,23 +92,45 @@ func (p *Parser) Parse() *Program {
 	return prog
 }
 
-func (p *Parser) scan() (Token, string) {
-	p.n++
+var MatchAssignment = []Token{Identifier, Whitespace, String}
 
-	// check if n is in p.buf (n < len p.buf)
-	if p.n < len(p.buf) {
-		fmt.Println("pulling from buffer")
-		b := p.buf[len(p.buf)-1]
-		return b.tok, b.lit
+func (p *Parser) is(ts ...Token) bool {
+	for _, t := range ts {
+		tok, _ := p.scan()
+
+		defer func() { p.unscan() }()
+
+		if tok != t {
+			fmt.Println("Got", t, "expected", tok)
+			return false
+		}
 	}
 
-	tok, lit := p.l.Scan()
-	p.buf = append(p.buf, buf{
-		tok: tok,
-		lit: lit,
-	})
+	return true
+}
 
-	return tok, lit
+// If it can pull n from tokens, do that... else scan new tok
+// and add it to the buf
+func (p *Parser) scan() (Token, string) {
+	defer func() {
+		p.n++
+	}()
+
+	if p.n >= len(p.buf) {
+		fmt.Println("Scanning new token", p.n)
+		tok, lit := p.l.Scan()
+		p.buf = append(p.buf, buf{
+			tok: tok,
+			lit: lit,
+		})
+
+		return tok, lit
+	}
+
+	b := p.buf[p.n]
+
+	fmt.Println("Retrieving old token", p.n)
+	return b.tok, b.lit
 }
 
 func (p *Parser) unscan() {
