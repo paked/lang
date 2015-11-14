@@ -23,7 +23,7 @@ func (p *Parser) Parse() *Program {
 	}
 
 	for {
-		tok, lit := p.scanSkipWhitespace()
+		tok, _ := p.scanSkipWhitespace()
 		if tok == EOF {
 			fmt.Println("REACHED EOF!!!")
 			break
@@ -32,55 +32,9 @@ func (p *Parser) Parse() *Program {
 		p.unscan()
 
 		if p.is(MatchAssignment...) {
-			tok, lit = p.scanSkipWhitespace()
-			// Got name
-			assign := &AssignmentStatement{
-				Name: lit,
-			}
+			as, _ := p.parseAssignment()
 
-			tok, lit = p.scanSkipWhitespace()
-			if tok != String {
-				fmt.Println("NOT TYPE")
-				fmt.Println(tok, lit)
-				break
-			}
-
-			tok, lit = p.scanSkipWhitespace()
-			if tok != Assign {
-				fmt.Println("NOT ASSIGN. TIME TO DIE!")
-				break
-			}
-
-			tok, lit = p.scanSkipWhitespace()
-			if tok != Quotes {
-				fmt.Println("NOT quotes. TIME TO DIE")
-				fmt.Println(tok, lit)
-				break
-			}
-
-			var buf string
-
-			for {
-				tok, lit := p.scan()
-
-				if tok == EOF {
-					p.unscan()
-					break
-				}
-
-				if tok == Quotes {
-					break
-				}
-
-				buf += lit
-			}
-
-			fmt.Println("[DONE] got value", buf)
-
-			assign.Value = buf
-
-			prog.statements = append(prog.statements, assign)
-
+			prog.statements = append(prog.statements, as)
 			continue
 		}
 
@@ -93,6 +47,57 @@ func (p *Parser) Parse() *Program {
 }
 
 var MatchAssignment = []Token{Identifier, Whitespace, String}
+
+func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
+	tok, lit := p.scanSkipWhitespace()
+	// Got name
+	assign := &AssignmentStatement{
+		Name: lit,
+	}
+
+	tok, lit = p.scanSkipWhitespace()
+	if tok != String {
+		fmt.Println("NOT TYPE")
+		return nil, fmt.Errorf("found %v expected String")
+	}
+
+	tok, lit = p.scanSkipWhitespace()
+	if tok != Assign {
+		fmt.Println("NOT ASSIGN. TIME TO DIE!")
+		return nil, fmt.Errorf("found %v expected String")
+	}
+
+	tok, lit = p.scanSkipWhitespace()
+	if tok != Quotes {
+		fmt.Println("NOT quotes. TIME TO DIE")
+		fmt.Println(tok, lit)
+
+		return nil, fmt.Errorf("found %v expected quotes")
+	}
+
+	var buf string
+
+	for {
+		tok, lit := p.scan()
+
+		if tok == EOF {
+			p.unscan()
+			break
+		}
+
+		if tok == Quotes {
+			break
+		}
+
+		buf += lit
+	}
+
+	fmt.Println("[DONE] got value", buf)
+
+	assign.Value = buf
+
+	return assign, nil
+}
 
 func (p *Parser) is(ts ...Token) bool {
 	for _, t := range ts {
@@ -117,8 +122,8 @@ func (p *Parser) scan() (Token, string) {
 	}()
 
 	if p.n >= len(p.buf) {
-		fmt.Println("Scanning new token", p.n)
 		tok, lit := p.l.Scan()
+		fmt.Println("Scanning new token", p.n, tok)
 		p.buf = append(p.buf, buf{
 			tok: tok,
 			lit: lit,
@@ -129,7 +134,7 @@ func (p *Parser) scan() (Token, string) {
 
 	b := p.buf[p.n]
 
-	fmt.Println("Retrieving old token", p.n)
+	fmt.Println("Retrieving old token", p.n, b.tok)
 	return b.tok, b.lit
 }
 
