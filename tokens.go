@@ -22,4 +22,7 @@ const (
 	// Types
 	String
 	Int
+
+	// Vals
+	Number
 )

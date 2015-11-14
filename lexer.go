@@ -28,6 +28,10 @@ func (l *Lexer) Scan() (Token, string) {
 		l.unread()
 
 		return l.scanIdentifier()
+	} else if l.isNumber(ch) {
+		l.unread()
+
+		return l.scanNumber()
 	}
 
 	switch ch {
@@ -69,12 +73,32 @@ func (l *Lexer) scanWhitespace() (Token, string) {
 	return Whitespace, buf.String()
 }
 
-func (l *Lexer) isLetter(ch rune) bool {
-	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
-}
-
 func (l *Lexer) isNumber(ch rune) bool {
 	return ch > '0' && ch < '9'
+}
+
+func (l *Lexer) scanNumber() (Token, string) {
+	var buf bytes.Buffer
+
+	for {
+		ch := l.read()
+
+		if ch == eof {
+			break
+		} else if !l.isNumber(ch) {
+			l.unread()
+
+			break
+		}
+
+		buf.WriteRune(ch)
+	}
+
+	return Number, buf.String()
+}
+
+func (l *Lexer) isLetter(ch rune) bool {
+	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
 }
 
 func (l *Lexer) scanIdentifier() (Token, string) {

@@ -35,6 +35,7 @@ func TestLexIdentifiers(t *testing.T) {
 		t.Errorf("Wrong literal got %v, wanted %v", s, src)
 	}
 }
+
 func TestLexTypeInt(t *testing.T) {
 	src := `message int`
 
@@ -63,6 +64,35 @@ func TestLexTypeInt(t *testing.T) {
 		t.Errorf("(2) Wrong naming literal got %v, wanted %v", s, "x")
 	}
 }
+
+func TestLexValueInt(t *testing.T) {
+	src := `message int = 123`
+
+	l := NewLexer(strings.NewReader(src))
+
+	// skip ident
+	l.Scan()
+	// skip whitespace
+	l.Scan()
+	// skip int
+	l.Scan()
+	// skip whitespace
+	l.Scan()
+	// skip '='
+	l.Scan()
+	// skip whitespace
+	l.Scan()
+
+	tok, lit := l.Scan()
+	if tok != Number {
+		t.Errorf("Wrong value type, got %v expected %v", tok, Number)
+	}
+
+	if lit != "123" {
+		t.Errorf("Wrong value lit, go %v expected %v", lit, "123")
+	}
+}
+
 func TestLexTypeString(t *testing.T) {
 	src := `message string`
 
