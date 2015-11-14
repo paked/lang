@@ -49,6 +49,10 @@ func (as *AssignmentStatement) Eval(s *Scope) error {
 	return nil
 }
 
+func (as *AssignmentStatement) String() string {
+	return fmt.Sprintf("%v = %v", as.Name, as.Value.v)
+}
+
 type FunctionStatement struct {
 	Name   string
 	Params string

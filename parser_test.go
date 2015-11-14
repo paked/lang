@@ -59,3 +59,28 @@ func TestParsingFunction(t *testing.T) {
 		t.Errorf("wrong value for print got '%v' wanted 'hello'", out.String())
 	}
 }
+
+func TestParsingNumber(t *testing.T) {
+	src := `x int = 123`
+
+	l := NewLexer(strings.NewReader(src))
+	p := NewParser(l)
+
+	prog := p.Parse()
+	prog.Run()
+
+	v := prog.scope.Get("x")
+	if v == nil {
+		t.Error("could not get x from scope")
+		return
+	}
+
+	i, err := v.ToInt()
+	if err != nil {
+		t.Error("Coudl not move v to int")
+	}
+
+	if i != 123 {
+		t.Errorf("wrong value, expected %v got %v", 123, i)
+	}
+}

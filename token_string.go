@@ -4,9 +4,9 @@ package lang
 
 import "fmt"
 
-const _Token_name = "IllegalEOFWhitespaceIdentifierQuotesOpenParenCloseParenAssignString"
+const _Token_name = "IllegalEOFWhitespaceIdentifierQuotesOpenParenCloseParenAssignStringIntNumber"
 
-var _Token_index = [...]uint8{0, 7, 10, 20, 30, 36, 45, 55, 61, 67}
+var _Token_index = [...]uint8{0, 7, 10, 20, 30, 36, 45, 55, 61, 67, 70, 76}
 
 func (i Token) String() string {
 	i -= 1

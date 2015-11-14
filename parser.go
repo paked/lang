@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Parser struct {
@@ -37,7 +38,7 @@ func (p *Parser) Parse() *Program {
 
 		p.unscan()
 
-		if p.is(MatchAssignment...) {
+		if p.is(MatchStringAssignment...) || p.is(MatchIntAssignment...) {
 			as, err := p.parseAssignment()
 			if err == nil {
 				prog.statements = append(prog.statements, as)
@@ -92,6 +93,20 @@ func (p *Parser) parseString() (string, error) {
 	return s, nil
 }
 
+func (p *Parser) parseNumber() (int, error) {
+	tok, lit := p.scan()
+	if tok != Number {
+		return 0, fmt.Errorf("Wrong token type expected %v got %v", Number, tok)
+	}
+
+	i, err := strconv.Atoi(lit)
+	if err != nil {
+		return 0, err
+	}
+
+	return i, nil
+}
+
 func (p *Parser) parseLiteral() (*Value, error) {
 	n := p.n
 
@@ -100,8 +115,14 @@ func (p *Parser) parseLiteral() (*Value, error) {
 		return NewValue(s)
 	}
 
-	fmt.Println(err)
+	p.reset(n)
 
+	i, err := p.parseNumber()
+	if err == nil {
+		return NewValue(i)
+	}
+
+	fmt.Println(err)
 	p.reset(n)
 
 	return nil, errors.New("no literal")
@@ -133,7 +154,8 @@ func (p *Parser) parseFunction() (*FunctionStatement, error) {
 	return f, nil
 }
 
-var MatchAssignment = []Token{Identifier, Whitespace, String}
+var MatchStringAssignment = []Token{Identifier, Whitespace, String}
+var MatchIntAssignment = []Token{Identifier, Whitespace, Int}
 
 func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 	tok, lit := p.scanSkipWhitespace()
@@ -143,18 +165,18 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 	}
 
 	tok, lit = p.scanSkipWhitespace()
-	if tok != String {
-		fmt.Println("NOT TYPE")
-		return nil, fmt.Errorf("found %v expected String")
+	if tok != String && tok != Int {
+		fmt.Println("NOT TYPE", tok)
+		return nil, fmt.Errorf("found %v expected String or Int")
 	}
 
 	tok, lit = p.scanSkipWhitespace()
 	if tok != Assign {
 		fmt.Println("NOT ASSIGN. TIME TO DIE!")
-		return nil, fmt.Errorf("found %v expected String")
+		return nil, fmt.Errorf("found %v expected Assign")
 	}
 
-	p.scan()
+	tok, lit = p.scan()
 
 	v, err := p.parseLiteral()
 	if err != nil {
@@ -163,6 +185,8 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 	}
 
 	assign.Value = v
+
+	fmt.Println(assign)
 
 	return assign, nil
 }
@@ -191,7 +215,6 @@ func (p *Parser) scan() (Token, string) {
 
 	if p.n >= len(p.buf) {
 		tok, lit := p.l.Scan()
-		fmt.Println("Scanning new token", p.n, tok)
 		p.buf = append(p.buf, buf{
 			tok: tok,
 			lit: lit,
@@ -202,7 +225,6 @@ func (p *Parser) scan() (Token, string) {
 
 	b := p.buf[p.n]
 
-	fmt.Println("Retrieving old token", p.n, b.tok)
 	return b.tok, b.lit
 }
 
