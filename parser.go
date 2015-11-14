@@ -67,6 +67,46 @@ func (p *Parser) Parse() *Program {
 	return prog
 }
 
+func (p *Parser) parseString() (string, error) {
+	var s string
+
+	tok, lit := p.scan()
+	if tok != Quotes {
+		return "", fmt.Errorf("expected quotes got: %v (%v)", tok, lit)
+	}
+
+	for {
+		tok, lit = p.scan()
+		if tok == EOF {
+			p.unscan()
+			return "", errors.New("eof")
+		}
+
+		if tok == Quotes {
+			break
+		}
+
+		s += lit
+	}
+
+	return s, nil
+}
+
+func (p *Parser) parseLiteral() (*Value, error) {
+	n := p.n
+
+	s, err := p.parseString()
+	if err == nil {
+		return NewValue(s)
+	}
+
+	fmt.Println(err)
+
+	p.reset(n)
+
+	return nil, errors.New("no literal")
+}
+
 func (p *Parser) parseFunction() (*FunctionStatement, error) {
 	f := &FunctionStatement{}
 	tok, lit := p.scan()
@@ -80,33 +120,12 @@ func (p *Parser) parseFunction() (*FunctionStatement, error) {
 	// skip opening paren
 	p.scan()
 
-	var params string
-
-	tok, lit = p.scan()
-	if tok != Quotes {
-		return nil, fmt.Errorf("well that didnt work")
+	v, err := p.parseLiteral()
+	if err != nil {
+		return nil, err
 	}
 
-	for {
-		tok, lit = p.scan()
-		if tok == EOF {
-			return nil, errors.New("eof")
-		}
-
-		if tok == Quotes {
-			p.unscan()
-			break
-		}
-
-		params += lit
-	}
-
-	tok, lit = p.scan()
-	if tok != Quotes {
-		return nil, fmt.Errorf("well that didnt work")
-	}
-
-	f.Params = params
+	f.Params = v.MustString()
 
 	// skip closing paren
 	p.scan()
@@ -135,35 +154,11 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 		return nil, fmt.Errorf("found %v expected String")
 	}
 
-	tok, lit = p.scanSkipWhitespace()
-	if tok != Quotes {
-		fmt.Println("NOT quotes. TIME TO DIE")
-		fmt.Println(tok, lit)
+	p.scan()
 
-		return nil, fmt.Errorf("found %v expected quotes")
-	}
-
-	var buf string
-
-	for {
-		tok, lit := p.scan()
-
-		if tok == EOF {
-			p.unscan()
-			break
-		}
-
-		if tok == Quotes {
-			break
-		}
-
-		buf += lit
-	}
-
-	fmt.Println("[DONE] got value", buf)
-
-	v, err := NewValue(buf)
+	v, err := p.parseLiteral()
 	if err != nil {
+		fmt.Println("ERR:", err)
 		return nil, err
 	}
 

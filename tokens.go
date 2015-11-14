@@ -21,4 +21,5 @@ const (
 
 	// Types
 	String
+	Int
 )
