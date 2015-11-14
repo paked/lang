@@ -1,6 +1,10 @@
 package lang
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"os"
+)
 
 type Parser struct {
 	l *Lexer
@@ -18,8 +22,9 @@ func NewParser(l *Lexer) *Parser {
 func (p *Parser) Parse() *Program {
 	prog := &Program{
 		scope: &Scope{
-			make(map[string]string),
+			values: make(map[string]string),
 		},
+		out: os.Stdout,
 	}
 
 	for {
@@ -39,6 +44,13 @@ func (p *Parser) Parse() *Program {
 			} else {
 				p.reset(n)
 			}
+		} else if p.is(Identifier, OpenParen) {
+			f, err := p.parseFunction()
+			if err == nil {
+				prog.statements = append(prog.statements, f)
+			} else {
+				p.reset(n)
+			}
 		}
 
 		tok, lit = p.scan()
@@ -55,10 +67,51 @@ func (p *Parser) Parse() *Program {
 	return prog
 }
 
-func (p *Parser) reset(n int) {
-	for p.n > n {
-		p.unscan()
+func (p *Parser) parseFunction() (*FunctionStatement, error) {
+	f := &FunctionStatement{}
+	tok, lit := p.scan()
+
+	if tok != Identifier {
+		return nil, fmt.Errorf("not correct syntax")
 	}
+
+	f.Name = lit
+
+	// skip opening paren
+	p.scan()
+
+	var params string
+
+	tok, lit = p.scan()
+	if tok != Quotes {
+		return nil, fmt.Errorf("well that didnt work")
+	}
+
+	for {
+		tok, lit = p.scan()
+		if tok == EOF {
+			return nil, errors.New("eof")
+		}
+
+		if tok == Quotes {
+			p.unscan()
+			break
+		}
+
+		params += lit
+	}
+
+	tok, lit = p.scan()
+	if tok != Quotes {
+		return nil, fmt.Errorf("well that didnt work")
+	}
+
+	f.Params = params
+
+	// skip closing paren
+	p.scan()
+
+	return f, nil
 }
 
 var MatchAssignment = []Token{Identifier, Whitespace, String}
@@ -164,6 +217,12 @@ func (p *Parser) scanSkipWhitespace() (Token, string) {
 		if tok != Whitespace {
 			return tok, lit
 		}
+	}
+}
+
+func (p *Parser) reset(n int) {
+	for p.n > n {
+		p.unscan()
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 func TestAST(t *testing.T) {
 	p := Program{
 		scope: &Scope{
-			make(map[string]string),
+			values: make(map[string]string),
 		},
 	}
 

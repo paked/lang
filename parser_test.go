@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 )
@@ -38,5 +39,23 @@ y string = "no no"`
 
 	if v := prog.scope.Get("y"); v != "no no" {
 		t.Error("wrong value for y... got '%v' expected 'no no'", v)
+	}
+}
+
+func TestParsingFunction(t *testing.T) {
+	src := `print("hello")`
+
+	l := NewLexer(strings.NewReader(src))
+	p := NewParser(l)
+
+	var out bytes.Buffer
+
+	prog := p.Parse()
+
+	prog.out = &out
+	prog.Run()
+
+	if out.String() != "hello" {
+		t.Errorf("wrong value for print got '%v' wanted 'hello'", out.String())
 	}
 }
