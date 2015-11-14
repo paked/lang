@@ -1,0 +1,10 @@
+// name: Example
+// descr: This is an example of lang
+// author: Harrison Shoebridge
+// year: 2015
+
+x int = 24
+
+if x == 24 {
+    print("winning!")
+}
