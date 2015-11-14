@@ -6,15 +6,15 @@ import (
 )
 
 type Scope struct {
-	values map[string]string
+	values map[string]*Value
 	out    io.Writer
 }
 
-func (s *Scope) Set(key, val string) {
+func (s *Scope) Set(key string, val *Value) {
 	s.values[key] = val
 }
 
-func (s *Scope) Get(key string) string {
+func (s *Scope) Get(key string) *Value {
 	return s.values[key]
 }
 
@@ -40,7 +40,7 @@ type Statement interface {
 type AssignmentStatement struct {
 	Name  string
 	Type  string
-	Value string
+	Value *Value
 }
 
 func (as *AssignmentStatement) Eval(s *Scope) error {

@@ -18,7 +18,7 @@ func TestParsingAssignment(t *testing.T) {
 
 	prog.Run()
 
-	if xv := prog.scope.Get("x"); xv != x {
+	if xv := prog.scope.Get("x").MustString(); xv != x {
 		t.Errorf("wrong value for x... got '%v' expected '%v'", xv, x)
 	}
 }
@@ -33,11 +33,11 @@ y string = "no no"`
 	prog := p.Parse()
 	prog.Run()
 
-	if v := prog.scope.Get("x"); v != "hello" {
+	if v := prog.scope.Get("x").MustString(); v != "hello" {
 		t.Error("wrong value for x... got '%v' expected 'hello'", v)
 	}
 
-	if v := prog.scope.Get("y"); v != "no no" {
+	if v := prog.scope.Get("y").MustString(); v != "no no" {
 		t.Error("wrong value for y... got '%v' expected 'no no'", v)
 	}
 }

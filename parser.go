@@ -22,7 +22,7 @@ func NewParser(l *Lexer) *Parser {
 func (p *Parser) Parse() *Program {
 	prog := &Program{
 		scope: &Scope{
-			values: make(map[string]string),
+			values: make(map[string]*Value),
 		},
 		out: os.Stdout,
 	}
@@ -162,7 +162,12 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 
 	fmt.Println("[DONE] got value", buf)
 
-	assign.Value = buf
+	v, err := NewValue(buf)
+	if err != nil {
+		return nil, err
+	}
+
+	assign.Value = v
 
 	return assign, nil
 }
