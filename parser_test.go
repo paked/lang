@@ -87,13 +87,20 @@ func TestParsingNumber(t *testing.T) {
 }
 
 func TestParsingIf(t *testing.T) {
-	src := `if 9 != 9`
+	src := `if 9 == 9 {
+x int = 22
+y string = "ping"
+print("ping")
+}
+`
 
 	l := NewLexer(strings.NewReader(src))
 	p := NewParser(l)
 
 	prog := p.Parse()
+	fmt.Println("===BEGIN===")
 	prog.Run()
+	fmt.Println("===END===")
 }
 
 func TestParsingBlock(t *testing.T) {

@@ -32,7 +32,6 @@ func (p *Parser) Parse() *Program {
 		n := p.n
 		tok, lit := p.scanSkipWhitespace()
 		if tok == EOF {
-			fmt.Println("REACHED EOF!!!")
 			break
 		}
 
@@ -47,10 +46,8 @@ func (p *Parser) Parse() *Program {
 
 		tok, lit = p.scan()
 		if tok == Whitespace && lit == "\n" {
-			fmt.Println("reached end of statement!")
 			continue
 		} else if tok == EOF {
-			fmt.Println("reached EOF")
 			break
 		}
 
@@ -109,12 +106,6 @@ func (p *Parser) parseBlock() (*BlockStatement, error) {
 			fmt.Println("COULD NOT PARSE STATEMENT")
 			return nil, errors.New("THAT FAILED")
 		}
-
-		tok, lit := p.scan()
-		if tok == Whitespace && lit == "\n" {
-			fmt.Println("reached end of statement!")
-			continue
-		}
 	}
 
 	return bs, nil
@@ -149,10 +140,22 @@ func (p *Parser) parseIf() (*IfStatement, error) {
 		return nil, err
 	}
 
+	p.scan()
+
+	block, err := p.parseBlock()
+	if err != nil {
+		fmt.Println("invalid block", err)
+		return nil, err
+	}
+
+	fmt.Println("<====>")
+	fmt.Println(block)
+
 	is := &IfStatement{
-		A:  a,
-		B:  b,
-		Op: op,
+		A:    a,
+		B:    b,
+		Op:   op,
+		Then: block,
 	}
 
 	return is, nil
@@ -212,7 +215,6 @@ func (p *Parser) parseLiteral() (*Value, error) {
 		return NewValue(i)
 	}
 
-	fmt.Println(err)
 	p.reset(n)
 
 	return nil, errors.New("no literal")
@@ -256,13 +258,11 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 
 	tok, lit = p.scanSkipWhitespace()
 	if tok != String && tok != Int {
-		fmt.Println("NOT TYPE", tok)
 		return nil, fmt.Errorf("found %v expected String or Int")
 	}
 
 	tok, lit = p.scanSkipWhitespace()
 	if tok != Assign {
-		fmt.Println("NOT ASSIGN. TIME TO DIE!")
 		return nil, fmt.Errorf("found %v expected Assign")
 	}
 
@@ -270,7 +270,6 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 
 	v, err := p.parseLiteral()
 	if err != nil {
-		fmt.Println("ERR:", err)
 		return nil, err
 	}
 
@@ -292,7 +291,6 @@ func (p *Parser) is(ts ...Token) bool {
 		}
 
 		if tok != t {
-			fmt.Println("Got", t, "expected", tok)
 			return false
 		}
 	}
