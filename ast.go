@@ -63,7 +63,6 @@ func (f *FunctionStatement) Eval(s *Scope) error {
 	// TODO: pull function from scope
 	if f.Name == "print" {
 		fmt.Fprint(s.out, f.Params)
-		fmt.Println("printing:", f.Params)
 	}
 
 	return nil
@@ -80,7 +79,6 @@ type IfStatement struct {
 
 func (is *IfStatement) Eval(s *Scope) error {
 	if is.A.Compare(is.Op, is.B) {
-		fmt.Println("NOTICE: THEY ARE EQUAL")
 		return is.Then.Eval(s)
 	} else {
 		fmt.Println("NOTICE: TEY ARE NOT EQUAL")
@@ -94,11 +92,8 @@ type BlockStatement struct {
 }
 
 func (is *BlockStatement) Eval(s *Scope) error {
-	fmt.Println("EVALUATING A BLOCK")
 	for _, stmt := range is.Statements {
 		err := stmt.Eval(s)
-		fmt.Println("||||||||")
-		fmt.Printf("%T\n", stmt)
 		if err != nil {
 			return err
 		}

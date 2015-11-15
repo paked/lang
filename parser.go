@@ -54,6 +54,7 @@ func (p *Parser) Parse() *Program {
 		p.unscan()
 
 		fmt.Println("didnt match: SYNTAX ERROR")
+		fmt.Printf("tok: '%v', lit: '%v', lit(raw): '%v'", tok, lit, []byte(lit))
 		break
 	}
 
