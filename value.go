@@ -17,11 +17,13 @@ const (
 	ValueString
 	ValueBool
 	ValueComplex
+	ValueIndirect
 )
 
 type Value struct {
-	typ ValueType
-	v   interface{}
+	typ  ValueType
+	v    interface{}
+	vari variable
 }
 
 func NewValue(raw interface{}) (*Value, error) {
@@ -36,13 +38,37 @@ func NewValue(raw interface{}) (*Value, error) {
 			typ: ValueString,
 			v:   raw,
 		}, nil
+	case variable:
+		vari := raw.(variable)
+		return &Value{
+			typ:  ValueIndirect,
+			vari: vari,
+		}, nil
 	}
 
 	return nil, errors.New("Not implemented")
 }
 
+func (v *Value) V() (interface{}, error) {
+	if v.v != nil {
+		return v.v, nil
+	}
+
+	value := v.vari.scope.Get(v.vari.name)
+	if value == nil {
+		return nil, errors.New("unknown variable")
+	}
+
+	return value.V()
+}
+
 func (v *Value) ToInt() (int, error) {
-	i, ok := v.v.(int)
+	raw, err := v.V()
+	if err != nil {
+		return 0, err
+	}
+
+	i, ok := raw.(int)
 	if !ok {
 		return 0, NotValidType
 	}
@@ -57,7 +83,12 @@ func (v *Value) MustInt() int {
 }
 
 func (v *Value) ToString() (string, error) {
-	s, ok := v.v.(string)
+	raw, err := v.V()
+	if err != nil {
+		return "", err
+	}
+
+	s, ok := raw.(string)
 	if !ok {
 		return "", NotValidType
 	}
@@ -71,15 +102,27 @@ func (v *Value) MustString() string {
 	return s
 }
 
-func (v *Value) Compare(op Token, y *Value) bool {
-	switch v.typ {
-	case ValueInt:
+func (v *Value) Compare(s *Scope, op Token, y *Value) bool {
+	v.vari.scope = s
+	y.vari.scope = s
+
+	raw, err := v.V()
+	if err != nil {
+		fmt.Println(err, "<-====")
+	}
+
+	fmt.Println(v)
+
+	switch raw.(type) {
+	case int:
 		i := v.MustInt()
 		y, err := y.ToInt()
 		if err != nil {
 			fmt.Println(err)
 			return false
 		}
+
+		fmt.Println(y, op, i)
 
 		switch op {
 		case Equals:
@@ -93,4 +136,9 @@ func (v *Value) Compare(op Token, y *Value) bool {
 	}
 
 	return false
+}
+
+type variable struct {
+	name  string
+	scope *Scope
 }

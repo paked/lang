@@ -12,6 +12,7 @@ type Scope struct {
 }
 
 func (s *Scope) Set(key string, val *Value) {
+	val.vari.scope = s
 	s.values[key] = val
 }
 
@@ -78,7 +79,7 @@ type IfStatement struct {
 }
 
 func (is *IfStatement) Eval(s *Scope) error {
-	if is.A.Compare(is.Op, is.B) {
+	if is.A.Compare(s, is.Op, is.B) {
 		return is.Then.Eval(s)
 	} else {
 		fmt.Println("NOTICE: TEY ARE NOT EQUAL")

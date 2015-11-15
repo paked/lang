@@ -121,7 +121,7 @@ func (p *Parser) parseIf() (*IfStatement, error) {
 	tok, _ = p.scanSkipWhitespace()
 	p.unscan()
 
-	a, err := p.parseLiteral()
+	a, err := p.parseValue()
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (p *Parser) parseIf() (*IfStatement, error) {
 	p.scanSkipWhitespace()
 	p.unscan()
 
-	b, err := p.parseLiteral()
+	b, err := p.parseValue()
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +221,44 @@ func (p *Parser) parseLiteral() (*Value, error) {
 	return nil, errors.New("no literal")
 }
 
+func (p *Parser) parseVariable() (*Value, error) {
+	tok, lit := p.scan()
+	if tok != Identifier {
+		return nil, errors.New("wrong type")
+	}
+
+	v, err := NewValue(variable{
+		name: lit,
+	})
+
+	if err != nil {
+		fmt.Println("WRONG WRONG WRONG =====")
+		return nil, err
+	}
+
+	return v, nil
+}
+
+func (p *Parser) parseValue() (*Value, error) {
+	n := p.n
+
+	v, err := p.parseLiteral()
+	if err == nil {
+		return v, nil
+	}
+
+	p.reset(n)
+
+	v, err = p.parseVariable()
+	if err == nil {
+		return v, nil
+	}
+
+	p.reset(n)
+
+	return nil, errors.New("no value")
+}
+
 func (p *Parser) parseFunction() (*FunctionStatement, error) {
 	f := &FunctionStatement{}
 	tok, lit := p.scan()
@@ -234,7 +272,7 @@ func (p *Parser) parseFunction() (*FunctionStatement, error) {
 	// skip opening paren
 	p.scan()
 
-	v, err := p.parseLiteral()
+	v, err := p.parseValue()
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +307,7 @@ func (p *Parser) parseAssignment() (*AssignmentStatement, error) {
 
 	tok, lit = p.scan()
 
-	v, err := p.parseLiteral()
+	v, err := p.parseValue()
 	if err != nil {
 		return nil, err
 	}

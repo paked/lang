@@ -160,3 +160,20 @@ func TestParsingBlock(t *testing.T) {
 		t.Error("wrong value z")
 	}
 }
+
+func TestParserValuesAndVariables(t *testing.T) {
+	src := `x int = 22
+if x == 22 {
+	y int = 23
+}`
+	l := NewLexer(strings.NewReader(src))
+	p := NewParser(l)
+
+	prog := p.Parse()
+	prog.Run()
+
+	v := prog.scope.Get("y")
+	if v == nil {
+		t.Error("could not get y")
+	}
+}
