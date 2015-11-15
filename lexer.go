@@ -50,6 +50,10 @@ func (l *Lexer) Scan() (Token, string) {
 		return OpenParen, "("
 	case ')':
 		return CloseParen, ")"
+	case '{':
+		return OpenBracket, "{"
+	case '}':
+		return CloseBracket, "}"
 	case '=':
 		return Assign, "="
 	case '"':

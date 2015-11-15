@@ -38,42 +38,86 @@ func (p *Parser) Parse() *Program {
 
 		p.unscan()
 
-		if p.is(MatchStringAssignment...) || p.is(MatchIntAssignment...) {
-			as, err := p.parseAssignment()
-			if err == nil {
-				prog.statements = append(prog.statements, as)
-			} else {
-				p.reset(n)
-			}
-		} else if p.is(Identifier, OpenParen) {
-			f, err := p.parseFunction()
-			if err == nil {
-				prog.statements = append(prog.statements, f)
-			} else {
-				p.reset(n)
-			}
-		} else if p.is(If, Whitespace) {
-			fmt.Println("MATCHING MATCHING")
-			contr, err := p.parseIf()
-			if err == nil {
-				prog.statements = append(prog.statements, contr)
-			} else {
-				p.reset(n)
-			}
+		stmt, err := p.parseStatement()
+		if err == nil {
+			prog.statements = append(prog.statements, stmt)
+		} else {
+			p.reset(n)
 		}
 
 		tok, lit = p.scan()
 		if tok == Whitespace && lit == "\n" {
-			fmt.Println("reached termination!")
+			fmt.Println("reached end of statement!")
 			continue
+		} else if tok == EOF {
+			fmt.Println("reached EOF")
+			break
 		}
 
 		p.unscan()
 
 		fmt.Println("didnt match: SYNTAX ERROR")
+		break
 	}
 
 	return prog
+}
+
+func (p *Parser) parseStatement() (Statement, error) {
+	if p.is(MatchStringAssignment...) || p.is(MatchIntAssignment...) {
+		return p.parseAssignment()
+	} else if p.is(Identifier, OpenParen) {
+		return p.parseFunction()
+	} else if p.is(If, Whitespace, Any, Whitespace, Any, Whitespace) {
+		return p.parseIf()
+	} else if p.is(OpenBracket) {
+		return p.parseBlock()
+	}
+
+	return nil, errors.New("no statement found")
+}
+
+func (p *Parser) parseBlock() (*BlockStatement, error) {
+	n := p.n
+	bs := &BlockStatement{}
+
+	tok, _ := p.scan()
+	if tok != OpenBracket {
+		return nil, errors.New("expected open bracket")
+	}
+
+	for {
+		tok, _ := p.scanSkipWhitespace()
+
+		if tok == EOF {
+			p.unscan()
+
+			return nil, errors.New("unexpected EOF")
+		}
+
+		if tok == CloseBracket {
+			break
+		}
+
+		p.unscan()
+
+		stmt, err := p.parseStatement()
+		if err == nil {
+			bs.Statements = append(bs.Statements, stmt)
+		} else {
+			p.reset(n)
+			fmt.Println("COULD NOT PARSE STATEMENT")
+			return nil, errors.New("THAT FAILED")
+		}
+
+		tok, lit := p.scan()
+		if tok == Whitespace && lit == "\n" {
+			fmt.Println("reached end of statement!")
+			continue
+		}
+	}
+
+	return bs, nil
 }
 
 func (p *Parser) parseIf() (*IfStatement, error) {
@@ -243,7 +287,11 @@ func (p *Parser) is(ts ...Token) bool {
 
 		defer func() { p.unscan() }()
 
-		if tok != t || tok == Any {
+		if t == Any {
+			continue
+		}
+
+		if tok != t {
 			fmt.Println("Got", t, "expected", tok)
 			return false
 		}

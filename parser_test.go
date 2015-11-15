@@ -2,6 +2,7 @@ package lang
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -86,11 +87,69 @@ func TestParsingNumber(t *testing.T) {
 }
 
 func TestParsingIf(t *testing.T) {
-	src := `if 9 == 9`
+	src := `if 9 != 9`
 
 	l := NewLexer(strings.NewReader(src))
 	p := NewParser(l)
 
 	prog := p.Parse()
 	prog.Run()
+}
+
+func TestParsingBlock(t *testing.T) {
+	src := `z int = 42
+{
+	x int = 22
+	y string = "party!"
+}`
+
+	l := NewLexer(strings.NewReader(src))
+	p := NewParser(l)
+
+	prog := p.Parse()
+	prog.Run()
+
+	fmt.Println(prog.scope)
+
+	v := prog.scope.Get("x")
+	if v == nil {
+		t.Error("could not get x from scope")
+	}
+
+	i, err := v.ToInt()
+	if err != nil {
+		t.Error("could nor cast to x")
+	}
+
+	if i != 22 {
+		t.Error("wrong value in x")
+	}
+
+	v = prog.scope.Get("y")
+	if v == nil {
+		t.Error("could not get y froms cope")
+	}
+
+	str, err := v.ToString()
+	if err != nil {
+		t.Error("could not cast to string")
+	}
+
+	if str != "party!" {
+		t.Error("wrong value in y")
+	}
+
+	v = prog.scope.Get("z")
+	if v == nil {
+		t.Error("could not get z")
+	}
+
+	i, err = v.ToInt()
+	if err != nil {
+		t.Error("could not cast z to int")
+	}
+
+	if i != 42 {
+		t.Error("wrong value z")
+	}
 }

@@ -84,3 +84,19 @@ func (is *IfStatement) Eval(s *Scope) error {
 
 	return errors.New("not implemented")
 }
+
+type BlockStatement struct {
+	Statements []Statement
+}
+
+func (is *BlockStatement) Eval(s *Scope) error {
+	for _, stmt := range is.Statements {
+		err := stmt.Eval(s)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

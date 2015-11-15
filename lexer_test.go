@@ -164,7 +164,7 @@ y string = "hello"`
 }
 
 func TestLexIf(t *testing.T) {
-	src := `if 0 == 0`
+	src := `if 0 == 0 { print("hello") }`
 
 	l := NewLexer(strings.NewReader(src))
 
@@ -180,5 +180,14 @@ func TestLexIf(t *testing.T) {
 	tok, _ = l.Scan()
 	if tok != Equals {
 		t.Errorf("expected equals got %v", tok)
+	}
+
+	l.Scan()
+	l.Scan()
+	l.Scan()
+
+	tok, _ = l.Scan()
+	if tok != OpenBracket {
+		t.Errorf("expected open bracket got %v", tok)
 	}
 }
