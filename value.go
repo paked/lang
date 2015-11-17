@@ -84,7 +84,7 @@ func (lit *Literal) Compare(op Token, b *Literal) bool {
 	switch lit.typ {
 	case ValueInt:
 		x := lit.MustInt()
-		y := lit.MustInt()
+		y := b.MustInt()
 
 		switch op {
 		case Equals:
