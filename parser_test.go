@@ -155,3 +155,24 @@ if x == 22 {
 		t.Error("variables were not pulled")
 	}
 }
+
+func TestParserValuesReset(t *testing.T) {
+	src := `x int = 22
+x = 10`
+
+	l := NewLexer(strings.NewReader(src))
+	p := NewParser(l)
+
+	prog := p.Parse()
+	prog.Run()
+
+	v := prog.scope.Get("x")
+	if v == nil {
+		t.Error("could not get x")
+	}
+
+	i := v.MustInt()
+	if i != 10 {
+		t.Errorf("wrong value for x got %v expected %v", i, 10)
+	}
+}

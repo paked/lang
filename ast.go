@@ -136,3 +136,19 @@ func (is *BlockStatement) Eval(s *Scope) error {
 
 	return nil
 }
+
+type SetStatement struct {
+	Name  string
+	Value Value
+}
+
+func (ss *SetStatement) Eval(s *Scope) error {
+	lit, err := ss.Value.Lit(s)
+	if err != nil {
+		return err
+	}
+
+	s.Set(ss.Name, lit)
+
+	return nil
+}

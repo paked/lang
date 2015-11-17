@@ -64,6 +64,8 @@ func (p *Parser) Parse() *Program {
 func (p *Parser) parseStatement() (Statement, error) {
 	if p.is(MatchStringAssignment...) || p.is(MatchIntAssignment...) {
 		return p.parseAssignment()
+	} else if p.is(Identifier, Whitespace, Assign) {
+		return p.parseSet()
 	} else if p.is(Identifier, OpenParen) {
 		return p.parseFunction()
 	} else if p.is(If, Whitespace, Any, Whitespace, Any, Whitespace) {
@@ -73,6 +75,37 @@ func (p *Parser) parseStatement() (Statement, error) {
 	}
 
 	return nil, errors.New("no statement found")
+}
+
+func (p *Parser) parseSet() (*SetStatement, error) {
+	ss := &SetStatement{}
+
+	tok, lit := p.scan()
+	if tok != Identifier {
+		return nil, errors.New("expected ident")
+	}
+
+	ss.Name = lit
+
+	// skip whitespace
+	p.scan()
+
+	tok, lit = p.scan()
+	if tok != Assign {
+		return nil, errors.New("expected assign")
+	}
+
+	// skip whitespace
+	p.scan()
+
+	v, err := p.parseValue()
+	if err != nil {
+		return nil, err
+	}
+
+	ss.Value = v
+
+	return ss, nil
 }
 
 func (p *Parser) parseBlock() (*BlockStatement, error) {
