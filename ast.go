@@ -7,6 +7,7 @@ import (
 )
 
 type Scope struct {
+	parent *Scope
 	values map[string]*Literal
 	out    io.Writer
 }
@@ -16,7 +17,20 @@ func (s *Scope) Set(key string, val *Literal) {
 }
 
 func (s *Scope) Get(key string) *Literal {
-	return s.values[key]
+	lit := s.values[key]
+	if lit == nil && s.parent != nil {
+		return s.parent.Get(key)
+	}
+
+	return lit
+}
+
+func (s *Scope) Sub() *Scope {
+	return &Scope{
+		out:    s.out,
+		values: make(map[string]*Literal),
+		parent: s,
+	}
 }
 
 type Program struct {
