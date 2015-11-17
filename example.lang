@@ -1,1 +1,5 @@
-print("hello")
+x int = 9
+if x == 9 {
+    x = 22
+    print(x)
+}
