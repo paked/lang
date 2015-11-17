@@ -8,11 +8,11 @@ import (
 func TestAST(t *testing.T) {
 	p := Program{
 		scope: &Scope{
-			values: make(map[string]*Value),
+			values: make(map[string]*Literal),
 		},
 	}
 
-	v, err := NewValue("raw")
+	v, err := NewLiteral("raw")
 	if err != nil {
 		t.Error("invalid value")
 	}

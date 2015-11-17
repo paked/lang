@@ -7,16 +7,15 @@ import (
 )
 
 type Scope struct {
-	values map[string]*Value
+	values map[string]*Literal
 	out    io.Writer
 }
 
-func (s *Scope) Set(key string, val *Value) {
-	val.vari.scope = s
+func (s *Scope) Set(key string, val *Literal) {
 	s.values[key] = val
 }
 
-func (s *Scope) Get(key string) *Value {
+func (s *Scope) Get(key string) *Literal {
 	return s.values[key]
 }
 
@@ -42,36 +41,46 @@ type Statement interface {
 type AssignmentStatement struct {
 	Name  string
 	Type  string
-	Value *Value
+	Value Value
 }
 
 func (as *AssignmentStatement) Eval(s *Scope) error {
-	s.Set(as.Name, as.Value)
+	v, err := as.Value.Lit(s)
+	if err != nil {
+		return err
+	}
+
+	s.Set(as.Name, v)
 
 	return nil
 }
 
 func (as *AssignmentStatement) String() string {
-	return fmt.Sprintf("%v = %v", as.Name, as.Value.v)
+	return fmt.Sprintf("%v = %v", as.Name, as.Value)
 }
 
 type FunctionStatement struct {
 	Name   string
-	Params string
+	Params Value
 }
 
 func (f *FunctionStatement) Eval(s *Scope) error {
 	// TODO: pull function from scope
 	if f.Name == "print" {
-		fmt.Fprint(s.out, f.Params)
+		lit, err := f.Params.Lit(s)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprint(s.out, lit)
 	}
 
 	return nil
 }
 
 type IfStatement struct {
-	A *Value
-	B *Value
+	A Value
+	B Value
 
 	Op Token
 
@@ -79,7 +88,17 @@ type IfStatement struct {
 }
 
 func (is *IfStatement) Eval(s *Scope) error {
-	if is.A.Compare(s, is.Op, is.B) {
+	a, err := is.A.Lit(s)
+	if err != nil {
+		return err
+	}
+
+	b, err := is.B.Lit(s)
+	if err != nil {
+		return err
+	}
+
+	if a.Compare(is.Op, b) {
 		return is.Then.Eval(s)
 	} else {
 		fmt.Println("NOTICE: TEY ARE NOT EQUAL")

@@ -23,7 +23,7 @@ func NewParser(l *Lexer) *Parser {
 func (p *Parser) Parse() *Program {
 	prog := &Program{
 		scope: &Scope{
-			values: make(map[string]*Value),
+			values: make(map[string]*Literal),
 		},
 		out: os.Stdout,
 	}
@@ -201,19 +201,19 @@ func (p *Parser) parseNumber() (int, error) {
 	return i, nil
 }
 
-func (p *Parser) parseLiteral() (*Value, error) {
+func (p *Parser) parseLiteral() (Value, error) {
 	n := p.n
 
 	s, err := p.parseString()
 	if err == nil {
-		return NewValue(s)
+		return NewLiteral(s)
 	}
 
 	p.reset(n)
 
 	i, err := p.parseNumber()
 	if err == nil {
-		return NewValue(i)
+		return NewLiteral(i)
 	}
 
 	p.reset(n)
@@ -221,16 +221,13 @@ func (p *Parser) parseLiteral() (*Value, error) {
 	return nil, errors.New("no literal")
 }
 
-func (p *Parser) parseVariable() (*Value, error) {
+func (p *Parser) parseVariable() (Value, error) {
 	tok, lit := p.scan()
 	if tok != Identifier {
 		return nil, errors.New("wrong type")
 	}
 
-	v, err := NewValue(variable{
-		name: lit,
-	})
-
+	v, err := NewVariable(lit)
 	if err != nil {
 		fmt.Println("WRONG WRONG WRONG =====")
 		return nil, err
@@ -239,7 +236,7 @@ func (p *Parser) parseVariable() (*Value, error) {
 	return v, nil
 }
 
-func (p *Parser) parseValue() (*Value, error) {
+func (p *Parser) parseValue() (Value, error) {
 	n := p.n
 
 	v, err := p.parseLiteral()
@@ -277,7 +274,7 @@ func (p *Parser) parseFunction() (*FunctionStatement, error) {
 		return nil, err
 	}
 
-	f.Params = v.MustString()
+	f.Params = v
 
 	// skip closing paren
 	p.scan()

@@ -20,125 +20,114 @@ const (
 	ValueIndirect
 )
 
-type Value struct {
-	typ  ValueType
-	v    interface{}
-	vari variable
+type Value interface {
+	Lit(*Scope) (*Literal, error)
 }
 
-func NewValue(raw interface{}) (*Value, error) {
+type Literal struct {
+	typ ValueType
+	raw interface{}
+}
+
+func NewLiteral(raw interface{}) (*Literal, error) {
+	lit := &Literal{
+		raw: raw,
+	}
+
 	switch raw.(type) {
 	case int:
-		return &Value{
-			typ: ValueInt,
-			v:   raw,
-		}, nil
+		lit.typ = ValueInt
 	case string:
-		return &Value{
-			typ: ValueString,
-			v:   raw,
-		}, nil
-	case variable:
-		vari := raw.(variable)
-		return &Value{
-			typ:  ValueIndirect,
-			vari: vari,
-		}, nil
+		lit.typ = ValueString
+	default:
+		return nil, errors.New("couldnt creater lit")
 	}
 
-	return nil, errors.New("Not implemented")
+	return lit, nil
 }
 
-func (v *Value) V() (interface{}, error) {
-	if v.v != nil {
-		return v.v, nil
-	}
-
-	value := v.vari.scope.Get(v.vari.name)
-	if value == nil {
-		return nil, errors.New("unknown variable")
-	}
-
-	return value.V()
+func (lit *Literal) String() string {
+	return fmt.Sprint(lit.raw)
 }
 
-func (v *Value) ToInt() (int, error) {
-	raw, err := v.V()
-	if err != nil {
-		return 0, err
-	}
-
-	i, ok := raw.(int)
-	if !ok {
-		return 0, NotValidType
-	}
-
-	return i, nil
+func (lit *Literal) Lit(*Scope) (*Literal, error) {
+	return lit, nil
 }
 
-func (v *Value) MustInt() int {
-	i, _ := v.ToInt()
+func (lit *Literal) ToInt() (int, error) {
+	if lit.typ != ValueInt {
+		return 0, errors.New("failed cast")
+	}
+
+	return lit.raw.(int), nil
+}
+
+func (lit *Literal) MustInt() int {
+	i, _ := lit.ToInt()
 
 	return i
 }
 
-func (v *Value) ToString() (string, error) {
-	raw, err := v.V()
-	if err != nil {
-		return "", err
+func (lit *Literal) ToString() (string, error) {
+	if lit.typ != ValueString {
+		return "", errors.New("failed value")
 	}
 
-	s, ok := raw.(string)
-	if !ok {
-		return "", NotValidType
-	}
-
-	return s, nil
+	return lit.raw.(string), nil
 }
 
-func (v *Value) MustString() string {
-	s, _ := v.ToString()
-
-	return s
-}
-
-func (v *Value) Compare(s *Scope, op Token, y *Value) bool {
-	v.vari.scope = s
-	y.vari.scope = s
-
-	raw, err := v.V()
-	if err != nil {
-		fmt.Println(err, "<-====")
+func (lit *Literal) Compare(op Token, b *Literal) bool {
+	if lit.typ != b.typ {
+		return false
 	}
 
-	fmt.Println(v)
-
-	switch raw.(type) {
-	case int:
-		i := v.MustInt()
-		y, err := y.ToInt()
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		fmt.Println(y, op, i)
+	switch lit.typ {
+	case ValueInt:
+		x := lit.MustInt()
+		y := lit.MustInt()
 
 		switch op {
 		case Equals:
-			return i == y
+			return x == y
 		case NotEquals:
-			return i != y
+			return x != y
 		}
+	case ValueString:
+		x := lit.MustString()
+		y := lit.MustString()
 
-		fmt.Println("shouldnt be here")
-		return false
+		switch op {
+		case Equals:
+			return x == y
+		case NotEquals:
+			return x != y
+		}
 	}
 
 	return false
 }
 
-type variable struct {
-	name  string
-	scope *Scope
+func (lit *Literal) MustString() string {
+	s, _ := lit.ToString()
+
+	return s
+}
+
+type Variable struct {
+	name string
+}
+
+func NewVariable(name string) (*Variable, error) {
+	return &Variable{
+		name: name,
+	}, nil
+}
+
+func (v *Variable) Lit(s *Scope) (*Literal, error) {
+	lit := s.Get(v.name)
+	if lit == nil {
+		return lit, errors.New("couldnt get lit")
+	}
+
+	return lit, nil
 }
