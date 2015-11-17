@@ -107,7 +107,6 @@ func TestParsingBlock(t *testing.T) {
 	src := `z int = 42
 {
 	x int = 22
-	y string = "party!"
 }`
 
 	l := NewLexer(strings.NewReader(src))
@@ -119,31 +118,8 @@ func TestParsingBlock(t *testing.T) {
 	fmt.Println(prog.scope)
 
 	v := prog.scope.Get("x")
-	if v == nil {
-		t.Error("could not get x from scope")
-	}
-
-	i, err := v.ToInt()
-	if err != nil {
-		t.Error("could nor cast to x")
-	}
-
-	if i != 22 {
-		t.Error("wrong value in x")
-	}
-
-	v = prog.scope.Get("y")
-	if v == nil {
-		t.Error("could not get y froms cope")
-	}
-
-	str, err := v.ToString()
-	if err != nil {
-		t.Error("could not cast to string")
-	}
-
-	if str != "party!" {
-		t.Error("wrong value in y")
+	if v != nil {
+		t.Error("could get x from scope without access")
 	}
 
 	v = prog.scope.Get("z")
@@ -151,7 +127,7 @@ func TestParsingBlock(t *testing.T) {
 		t.Error("could not get z")
 	}
 
-	i, err = v.ToInt()
+	i, err := v.ToInt()
 	if err != nil {
 		t.Error("could not cast z to int")
 	}
@@ -164,16 +140,18 @@ func TestParsingBlock(t *testing.T) {
 func TestParserValuesAndVariables(t *testing.T) {
 	src := `x int = 22
 if x == 22 {
-	y int = 23
+	print("potato")
 }`
+
 	l := NewLexer(strings.NewReader(src))
 	p := NewParser(l)
 
+	var out bytes.Buffer
 	prog := p.Parse()
+	prog.out = &out
 	prog.Run()
 
-	v := prog.scope.Get("y")
-	if v == nil {
-		t.Error("could not get y")
+	if out.String() != "potato" {
+		t.Error("variables were not pulled")
 	}
 }

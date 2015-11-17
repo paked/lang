@@ -126,8 +126,9 @@ type BlockStatement struct {
 }
 
 func (is *BlockStatement) Eval(s *Scope) error {
+	scop := s.Sub()
 	for _, stmt := range is.Statements {
-		err := stmt.Eval(s)
+		err := stmt.Eval(scop)
 		if err != nil {
 			return err
 		}
