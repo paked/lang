@@ -143,9 +143,18 @@ type SetStatement struct {
 }
 
 func (ss *SetStatement) Eval(s *Scope) error {
+	old := s.Get(ss.Name)
+	if old == nil {
+		return errors.New("doesnt exist")
+	}
+
 	lit, err := ss.Value.Lit(s)
 	if err != nil {
 		return err
+	}
+
+	if old.typ != lit.typ {
+		return errors.New("not compatible type")
 	}
 
 	s.Set(ss.Name, lit)
